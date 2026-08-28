@@ -1,5 +1,5 @@
-import '../database/gps_log_repository.dart';
-import '../database/route_point_repository.dart';
+import '../database/repositories/gps_log_repository.dart';
+import '../database/repositories/route_point_repository.dart';
 
 class GpsToRouteService {
   final GpsLogRepository _gpsLogRepository;

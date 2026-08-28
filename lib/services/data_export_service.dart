@@ -1,10 +1,10 @@
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../database/geofence_repository.dart';
-import '../database/gps_log_repository.dart';
+import '../database/repositories/geofence_repository.dart';
+import '../database/repositories/gps_log_repository.dart';
 import '../database/moment_repository.dart';
-import '../database/route_point_repository.dart';
+import '../database/repositories/route_point_repository.dart';
 import '../database/trip_repository.dart';
 
 import '../models/trip_model.dart';

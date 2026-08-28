@@ -3,9 +3,9 @@ import 'package:flutter/foundation.dart';
 import '../database/database_helper.dart';
 import '../database/trip_repository.dart';
 import '../database/moment_repository.dart';
-import '../database/route_point_repository.dart';
-import '../database/gps_log_repository.dart';
-import '../database/geofence_repository.dart';
+import '../database/repositories/route_point_repository.dart';
+import '../database/repositories/gps_log_repository.dart';
+import '../database/repositories/geofence_repository.dart';
 
 import '../services/geofence_service.dart';
 import '../services/data_export_service.dart';

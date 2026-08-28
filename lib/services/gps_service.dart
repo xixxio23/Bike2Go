@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:geolocator/geolocator.dart';
 
 import '../models/gps_log_model.dart';
-import '../database/gps_log_repository.dart';
+import '../database/repositories/gps_log_repository.dart';
 
 class GpsService {
   final GpsLogRepository _gpsLogRepository;

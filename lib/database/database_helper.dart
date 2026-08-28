@@ -1,7 +1,6 @@
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
-import 'database_migrations.dart';
 import 'database_schema.dart';
 
 class DatabaseHelper {
@@ -20,13 +19,12 @@ class DatabaseHelper {
 
   Future<Database> _initDatabase() async {
     final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'trips.db');
+    final path = join(dbPath, 'bike2go.db');
 
     return openDatabase(
       path,
-      version: 4,
+      version: 1,
       onCreate: DatabaseSchema.create,
-      onUpgrade: DatabaseMigrations.upgrade,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -36,42 +34,56 @@ class DatabaseHelper {
   Future<void> clearAllData() async {
     final db = await database;
 
-    await db.delete('geofence_events');
-    await db.delete('route_points');
-    await db.delete('moments');
-    await db.delete('gps_logs');
-    await db.delete('trips');
+    await db.delete('theft_reports');
+    await db.delete('reviews');
+    await db.delete('ratings');
+    await db.delete('activity_events');
+    await db.delete('user_preferences');
+
+    await db.delete('road_works');
+    await db.delete('shelters');
+    await db.delete('cycling_paths');
   }
 
   Future<Map<String, dynamic>> getDatabaseStats() async {
     final db = await database;
 
-    final tripCount = await db.rawQuery(
-      'SELECT COUNT(*) as count FROM trips',
+    final cyclingPaths = await db.rawQuery(
+      'SELECT COUNT(*) as count FROM cycling_paths',
     );
 
-    final momentCount = await db.rawQuery(
-      'SELECT COUNT(*) as count FROM moments',
+    final shelters = await db.rawQuery(
+      'SELECT COUNT(*) as count FROM shelters',
     );
 
-    final gpsLogCount = await db.rawQuery(
-      'SELECT COUNT(*) as count FROM gps_logs',
+    final roadWorks = await db.rawQuery(
+      'SELECT COUNT(*) as count FROM road_works',
     );
 
-    final routePointCount = await db.rawQuery(
-      'SELECT COUNT(*) as count FROM route_points',
+    final ratings = await db.rawQuery(
+      'SELECT COUNT(*) as count FROM ratings',
     );
 
-    final geofenceCount = await db.rawQuery(
-      'SELECT COUNT(*) as count FROM geofence_events',
+    final reviews = await db.rawQuery(
+      'SELECT COUNT(*) as count FROM reviews',
+    );
+
+    final theftReports = await db.rawQuery(
+      'SELECT COUNT(*) as count FROM theft_reports',
+    );
+
+    final activityEvents = await db.rawQuery(
+      'SELECT COUNT(*) as count FROM activity_events',
     );
 
     return {
-      'trips': tripCount.first['count'],
-      'moments': momentCount.first['count'],
-      'gps_logs': gpsLogCount.first['count'],
-      'route_points': routePointCount.first['count'],
-      'geofence_events': geofenceCount.first['count'],
+      'cycling_paths': cyclingPaths.first['count'],
+      'shelters': shelters.first['count'],
+      'road_works': roadWorks.first['count'],
+      'ratings': ratings.first['count'],
+      'reviews': reviews.first['count'],
+      'theft_reports': theftReports.first['count'],
+      'activity_events': activityEvents.first['count'],
     };
   }
 
