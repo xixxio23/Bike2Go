@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../database/database_helper.dart';
 import '../models/cycling_path_model.dart';
 import '../models/shelter_model.dart';
 import '../models/road_work_model.dart';
 import '../services/urban_data_service.dart';
+import '../services/location_service.dart';
+import '../widgets/urban_map.dart';
 
 class UrbanMapScreen extends StatefulWidget {
   const UrbanMapScreen({super.key});
@@ -19,6 +22,11 @@ class _UrbanMapScreenState extends State<UrbanMapScreen> {
   List<CyclingPathModel> _cyclingPaths = [];
   List<ShelterModel> _shelters = [];
   List<RoadWorkModel> _roadWorks = [];
+
+  Map<String, double> _cyclingPathRatings = {};
+  Map<String, double> _shelterRatings = {};
+
+  LatLng? _userLocation;
 
   bool _isLoading = true;
   String? _error;
@@ -45,12 +53,36 @@ class _UrbanMapScreenState extends State<UrbanMapScreen> {
       final roadWorks =
           await _urbanDataService.getRoadWorks();
 
+      final cyclingPathRatings =
+          await _urbanDataService.getAverageRatings(
+        targetType: 'cycling_path',
+      );
+
+      final shelterRatings =
+          await _urbanDataService.getAverageRatings(
+        targetType: 'shelter',
+      );
+
+      final position =
+          await LocationService.getCurrentLocation();
+
       if (!mounted) return;
 
       setState(() {
         _cyclingPaths = cyclingPaths;
         _shelters = shelters;
         _roadWorks = roadWorks;
+
+        _cyclingPathRatings = cyclingPathRatings;
+        _shelterRatings = shelterRatings;
+
+        if (position != null) {
+          _userLocation = LatLng(
+            position.latitude,
+            position.longitude,
+          );
+        }
+
         _isLoading = false;
       });
     } catch (e) {
@@ -89,14 +121,13 @@ class _UrbanMapScreenState extends State<UrbanMapScreen> {
       );
     }
 
-    return Center(
-      child: Text(
-        'Dati caricati\n'
-        'Piste: ${_cyclingPaths.length}\n'
-        'Rastrelliere: ${_shelters.length}\n'
-        'Lavori: ${_roadWorks.length}',
-        textAlign: TextAlign.center,
-      ),
+    return UrbanMap(
+      cyclingPaths: _cyclingPaths,
+      shelters: _shelters,
+      roadWorks: _roadWorks,
+      userLocation: _userLocation,
+      cyclingPathRatings: _cyclingPathRatings,
+      shelterRatings: _shelterRatings,
     );
   }
 }

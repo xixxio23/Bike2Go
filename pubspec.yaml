@@ -11,12 +11,20 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # Mappe
   flutter_map: ^8.3.2
   latlong2: ^0.9.1
 
+  # Geolocalizzazione
+  geolocator: ^14.0.3
+
+  # Supabase - sincronizzazione remota
+  supabase_flutter: ^2.17.2
+
+  # UI
   cupertino_icons: ^1.0.8
 
-  # Database
+  # Database locale
   sqflite: ^2.4.3
   path: ^1.9.1
 
