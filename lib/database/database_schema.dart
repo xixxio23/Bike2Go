@@ -83,6 +83,16 @@ class DatabaseSchema {
       )
     ''');
 
+    await db.execute('''
+    CREATE TABLE sync_queue (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      sync_id TEXT NOT NULL,
+      entity_type TEXT NOT NULL,
+      operation TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )
+  ''');
+
     // ============================================================
     // ACTIVITY RECOGNITION
     // ============================================================
