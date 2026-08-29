@@ -8,6 +8,7 @@ import '../models/road_work_model.dart';
 import '../services/urban_data_service.dart';
 import '../services/location_service.dart';
 import '../widgets/urban_map.dart';
+import 'nearby_shelters_screen.dart';
 
 class UrbanMapScreen extends StatefulWidget {
   const UrbanMapScreen({super.key});
@@ -100,6 +101,20 @@ class _UrbanMapScreenState extends State<UrbanMapScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Urban Cycling Map'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.near_me),
+            tooltip: 'Rastrelliere vicine',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const NearbySheltersScreen(),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: _buildBody(),
     );

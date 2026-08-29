@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'database/database_helper.dart';
 import 'screens/home_screen.dart';
+import 'screens/nearby_shelters_screen.dart';
 import 'services/feedback_sync_service.dart';
 
 Future<void> main() async {
@@ -43,6 +44,10 @@ class MyApp extends StatelessWidget {
         ),
       ),
       home: const HomeScreen(),
+      routes: {
+        '/nearby-shelters': (context) =>
+            const NearbySheltersScreen(),
+      },
     );
   }
 }
