@@ -52,6 +52,7 @@ class DatabaseSchema {
     await db.execute('''
       CREATE TABLE ratings (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sync_id TEXT NOT NULL UNIQUE,
         target_type TEXT NOT NULL,
         target_id TEXT NOT NULL,
         rating INTEGER NOT NULL,
@@ -62,6 +63,7 @@ class DatabaseSchema {
     await db.execute('''
       CREATE TABLE reviews (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sync_id TEXT NOT NULL UNIQUE,
         target_type TEXT NOT NULL,
         target_id TEXT NOT NULL,
         text TEXT NOT NULL,
@@ -72,6 +74,7 @@ class DatabaseSchema {
     await db.execute('''
       CREATE TABLE theft_reports (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sync_id TEXT NOT NULL UNIQUE,
         shelter_id TEXT NOT NULL,
         description TEXT,
         created_at TEXT NOT NULL,

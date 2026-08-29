@@ -1,3 +1,5 @@
+import 'package:uuid/uuid.dart';
+
 import '../database/database_helper.dart';
 import '../database/repositories/rating_repository.dart';
 import '../database/repositories/review_repository.dart';
@@ -10,6 +12,8 @@ class UserFeedbackService {
   final RatingRepository _ratingRepository;
   final ReviewRepository _reviewRepository;
   final TheftReportRepository _theftReportRepository;
+
+  final Uuid _uuid = const Uuid();
 
   UserFeedbackService(DatabaseHelper databaseHelper)
       : _ratingRepository = RatingRepository(databaseHelper),
@@ -27,10 +31,13 @@ class UserFeedbackService {
     required int rating,
   }) async {
     if (rating < 1 || rating > 5) {
-      throw ArgumentError('Il rating deve essere compreso tra 1 e 5.');
+      throw ArgumentError(
+        'Il rating deve essere compreso tra 1 e 5.',
+      );
     }
 
     final model = RatingModel(
+      syncId: _uuid.v4(),
       targetType: targetType,
       targetId: targetId,
       rating: rating,
@@ -81,10 +88,13 @@ class UserFeedbackService {
     required String text,
   }) async {
     if (text.trim().isEmpty) {
-      throw ArgumentError('Il testo della recensione non può essere vuoto.');
+      throw ArgumentError(
+        'Il testo della recensione non può essere vuoto.',
+      );
     }
 
     final model = ReviewModel(
+      syncId: _uuid.v4(),
       targetType: targetType,
       targetId: targetId,
       text: text.trim(),
@@ -113,6 +123,7 @@ class UserFeedbackService {
     String? description,
   }) async {
     final model = TheftReportModel(
+      syncId: _uuid.v4(),
       shelterId: shelterId,
       description: description?.trim().isEmpty == true
           ? null
