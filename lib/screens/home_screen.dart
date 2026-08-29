@@ -1,12 +1,81 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+import '../services/activity_recognition_service.dart';
+import 'nearby_shelters_screen.dart';
 import 'urban_map_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final ActivityRecognitionService _activityService =
+      ActivityRecognitionService();
+
+  StreamSubscription<String>? _activitySubscription;
+
+  String? _currentActivity;
+
+  @override
+  void initState() {
+    super.initState();
+    _startActivityRecognition();
+  }
+
+  Future<void> _startActivityRecognition() async {
+    try {
+      final available = await _activityService.isAvailable();
+
+      if (!available) return;
+
+      final permission = await _activityService.requestPermission();
+
+      if (!permission) return;
+
+      _activitySubscription =
+          _activityService.activityStream.listen((activity) {
+        if (!mounted) return;
+
+        setState(() {
+          _currentActivity = activity;
+        });
+      });
+
+      await _activityService.start();
+    } catch (_) {}
+  }
+
+  @override
+  void dispose() {
+    _activitySubscription?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final isCycling =
+        _currentActivity == ActivityRecognitionService.cycling;
+
+    final isWalking =
+        _currentActivity == ActivityRecognitionService.walking;
+
+    final activityText = isCycling
+        ? 'Cycling'
+        : isWalking
+            ? 'Walking'
+            : 'Stato non rilevato';
+
+    final activityIcon = isCycling
+        ? Icons.directions_bike
+        : isWalking
+            ? Icons.directions_walk
+            : Icons.help_outline;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Bike2Go'),
@@ -18,7 +87,7 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 30),
+              const Spacer(),
 
               const Icon(
                 Icons.directions_bike,
@@ -35,47 +104,23 @@ class HomeScreen extends StatelessWidget {
                     ),
               ),
 
-              const SizedBox(height: 12),
-
-              Text(
-                'Esplora Bologna in bicicletta',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.white70,
-                    ),
-              ),
-
               const SizedBox(height: 40),
 
               Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      const Icon(
-                        Icons.map_outlined,
-                        size: 42,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Mappa urbana',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Visualizza piste ciclabili, rastrelliere, '
-                        'lavori stradali e informazioni utili per '
-                        'muoverti in città.',
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+                child: ListTile(
+                  leading: Icon(
+                    activityIcon,
+                    size: 36,
+                  ),
+                  title: const Text('Stato'),
+                  subtitle: Text(
+                    activityText,
+                    style: const TextStyle(fontSize: 18),
                   ),
                 ),
               ),
 
-              const Spacer(),
+              const SizedBox(height: 24),
 
               SizedBox(
                 height: 56,
@@ -99,7 +144,31 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
+
+              SizedBox(
+                height: 56,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const NearbySheltersScreen(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.pedal_bike),
+                  label: const Text(
+                    'Rastrelliere vicine',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+
+              const Spacer(),
             ],
           ),
         ),

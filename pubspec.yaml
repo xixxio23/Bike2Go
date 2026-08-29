@@ -17,6 +17,7 @@ dependencies:
 
   # Geolocalizzazione
   geolocator: ^14.0.3
+  flutter_local_notifications: ^19.4.2
 
   # Supabase - sincronizzazione remota
   supabase_flutter: ^2.17.2

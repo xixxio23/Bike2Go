@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'database/database_helper.dart';
@@ -25,14 +26,66 @@ Future<void> main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  static const MethodChannel _navigationChannel =
+      MethodChannel('bike2go/navigation');
+
+  final GlobalKey<NavigatorState> _navigatorKey =
+      GlobalKey<NavigatorState>();
+
+  @override
+  void initState() {
+    super.initState();
+
+    _navigationChannel.setMethodCallHandler((call) async {
+      if (call.method == 'openNearbyShelters') {
+        _openNearbyShelters();
+      }
+    });
+
+    _checkNotificationNavigation();
+  }
+
+  Future<void> _checkNotificationNavigation() async {
+    try {
+      final shouldOpen =
+          await _navigationChannel.invokeMethod<bool>(
+        'checkOpenNearbyShelters',
+      );
+
+      if (shouldOpen == true) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _openNearbyShelters();
+        });
+      }
+    } catch (_) {}
+  }
+
+  void _openNearbyShelters() {
+    final navigator = _navigatorKey.currentState;
+
+    if (navigator == null) return;
+
+    navigator.push(
+      MaterialPageRoute(
+        builder: (_) => const NearbySheltersScreen(),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Bike2Go',
+      navigatorKey: _navigatorKey,
       theme: ThemeData(
         brightness: Brightness.dark,
         primarySwatch: Colors.teal,
@@ -44,10 +97,6 @@ class MyApp extends StatelessWidget {
         ),
       ),
       home: const HomeScreen(),
-      routes: {
-        '/nearby-shelters': (context) =>
-            const NearbySheltersScreen(),
-      },
     );
   }
 }
