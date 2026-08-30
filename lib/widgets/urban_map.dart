@@ -5,6 +5,7 @@ import 'package:latlong2/latlong.dart';
 import '../models/cycling_path_model.dart';
 import '../models/shelter_model.dart';
 import '../models/road_work_model.dart';
+import 'map_visual_style.dart';
 import 'urban_element_details.dart';
 
 class UrbanMap extends StatefulWidget {
@@ -12,9 +13,8 @@ class UrbanMap extends StatefulWidget {
   final List<ShelterModel> shelters;
   final List<RoadWorkModel> roadWorks;
   final LatLng? userLocation;
-
   final Map<String, double> cyclingPathRatings;
-  final Map<String, double> shelterRatings;
+  final Map<String, double?> shelterRatings;
 
   const UrbanMap({
     super.key,
@@ -26,18 +26,15 @@ class UrbanMap extends StatefulWidget {
     this.shelterRatings = const {},
   });
 
-  static const LatLng bolognaCenter = LatLng(
-    44.4949,
-    11.3426,
-  );
+  static const LatLng bolognaCenter = LatLng(44.4949, 11.3426);
 
   @override
   State<UrbanMap> createState() => _UrbanMapState();
 }
 
 class _UrbanMapState extends State<UrbanMap> {
-  final LayerHitNotifier<CyclingPathModel>
-      _cyclingPathHitNotifier = ValueNotifier(null);
+  final LayerHitNotifier<CyclingPathModel> _cyclingPathHitNotifier =
+      ValueNotifier(null);
 
   @override
   void dispose() {
@@ -54,11 +51,9 @@ class _UrbanMapState extends State<UrbanMap> {
       ),
       children: [
         TileLayer(
-          urlTemplate:
-              'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
           userAgentPackageName: 'com.bike2go.app',
         ),
-
         TranslucentPointer(
           child: GestureDetector(
             onTap: _onCyclingPathTap,
@@ -69,7 +64,6 @@ class _UrbanMapState extends State<UrbanMap> {
             ),
           ),
         ),
-
         MarkerLayer(
           markers: [
             ..._buildShelterMarkers(),
@@ -81,12 +75,7 @@ class _UrbanMapState extends State<UrbanMap> {
     );
   }
 
-  // ============================================================
-  // CYCLING PATHS
-  // ============================================================
-
-  List<Polyline<CyclingPathModel>>
-      _buildCyclingPathPolylines() {
+  List<Polyline<CyclingPathModel>> _buildCyclingPathPolylines() {
     return widget.cyclingPaths
         .expand(
           (path) => path.geometry.map(
@@ -100,10 +89,8 @@ class _UrbanMapState extends State<UrbanMap> {
                   )
                   .toList(),
               strokeWidth: 4,
-              color: _ratingColor(
-                widget.cyclingPathRatings[
-                  path.codice.toString()
-                ],
+              color: MapVisualStyle.cyclingPathColor(
+                widget.cyclingPathRatings[path.codice.toString()],
               ),
               hitValue: path,
             ),
@@ -115,28 +102,17 @@ class _UrbanMapState extends State<UrbanMap> {
   void _onCyclingPathTap() {
     final hitResult = _cyclingPathHitNotifier.value;
 
-    if (hitResult == null ||
-        hitResult.hitValues.isEmpty) {
-      return;
-    }
-
-    final path = hitResult.hitValues.first;
+    if (hitResult == null || hitResult.hitValues.isEmpty) return;
 
     _showDetails(
-      cyclingPath: path,
+      cyclingPath: hitResult.hitValues.first,
     );
   }
-
-  // ============================================================
-  // SHELTERS
-  // ============================================================
 
   List<Marker> _buildShelterMarkers() {
     return widget.shelters.map(
       (shelter) {
-        final rating = widget.shelterRatings[
-          shelter.id
-        ];
+        final safetyScore = widget.shelterRatings[shelter.id];
 
         return Marker(
           point: LatLng(
@@ -146,14 +122,10 @@ class _UrbanMapState extends State<UrbanMap> {
           width: 40,
           height: 40,
           child: GestureDetector(
-            onTap: () {
-              _showDetails(
-                shelter: shelter,
-              );
-            },
+            onTap: () => _showDetails(shelter: shelter),
             child: Icon(
               Icons.pedal_bike,
-              color: _ratingColor(rating),
+              color: MapVisualStyle.shelterSafetyColor(safetyScore),
               size: 30,
             ),
           ),
@@ -161,10 +133,6 @@ class _UrbanMapState extends State<UrbanMap> {
       },
     ).toList();
   }
-
-  // ============================================================
-  // ROAD WORKS
-  // ============================================================
 
   List<Marker> _buildRoadWorkMarkers() {
     return widget.roadWorks.map(
@@ -177,14 +145,10 @@ class _UrbanMapState extends State<UrbanMap> {
           width: 40,
           height: 40,
           child: GestureDetector(
-            onTap: () {
-              _showDetails(
-                roadWork: roadWork,
-              );
-            },
+            onTap: () => _showDetails(roadWork: roadWork),
             child: const Icon(
               Icons.construction,
-              color: Colors.orange,
+              color: MapVisualStyle.roadWorkColor,
               size: 30,
             ),
           ),
@@ -193,14 +157,8 @@ class _UrbanMapState extends State<UrbanMap> {
     ).toList();
   }
 
-  // ============================================================
-  // USER LOCATION
-  // ============================================================
-
   List<Marker> _buildUserLocationMarker() {
-    if (widget.userLocation == null) {
-      return [];
-    }
+    if (widget.userLocation == null) return [];
 
     return [
       Marker(
@@ -209,40 +167,12 @@ class _UrbanMapState extends State<UrbanMap> {
         height: 40,
         child: const Icon(
           Icons.my_location,
-          color: Colors.red,
+          color: MapVisualStyle.userLocationColor,
           size: 30,
         ),
       ),
     ];
   }
-
-  // ============================================================
-  // RATING COLOR
-  // ============================================================
-
-  Color _ratingColor(double? rating) {
-    if (rating == null) {
-      return Colors.grey;
-    }
-
-    if (rating <= 2.0) {
-      return Colors.red;
-    }
-
-    if (rating <= 3.0) {
-      return Colors.orange;
-    }
-
-    if (rating <= 4.0) {
-      return Colors.yellow.shade700;
-    }
-
-    return Colors.green;
-  }
-
-  // ============================================================
-  // DETAILS
-  // ============================================================
 
   void _showDetails({
     CyclingPathModel? cyclingPath,
@@ -252,13 +182,11 @@ class _UrbanMapState extends State<UrbanMap> {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      builder: (_) {
-        return UrbanElementDetails(
-          cyclingPath: cyclingPath,
-          shelter: shelter,
-          roadWork: roadWork,
-        );
-      },
+      builder: (_) => UrbanElementDetails(
+        cyclingPath: cyclingPath,
+        shelter: shelter,
+        roadWork: roadWork,
+      ),
     );
   }
 }

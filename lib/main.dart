@@ -7,6 +7,8 @@ import 'screens/home_screen.dart';
 import 'screens/nearby_shelters_screen.dart';
 import 'services/feedback_sync_service.dart';
 
+const String openRouteServiceApiKey = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjNlN2IwYjllMjA3NDQwY2U5YTY5YTYyZjU3YTQ0ZDhhIiwiaCI6Im11cm11cjY0In0=';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -96,7 +98,9 @@ class _MyAppState extends State<MyApp> {
           68,
         ),
       ),
-      home: const HomeScreen(),
+      home: const HomeScreen(
+        apiKey: openRouteServiceApiKey,
+      ),
     );
   }
 }
