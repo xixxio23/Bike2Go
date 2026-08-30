@@ -84,14 +84,14 @@ class DatabaseSchema {
     ''');
 
     await db.execute('''
-    CREATE TABLE sync_queue (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      sync_id TEXT NOT NULL,
-      entity_type TEXT NOT NULL,
-      operation TEXT NOT NULL,
-      updated_at TEXT NOT NULL
-    )
-  ''');
+      CREATE TABLE sync_queue (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sync_id TEXT NOT NULL,
+        entity_type TEXT NOT NULL,
+        operation TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    ''');
 
     // ============================================================
     // ACTIVITY RECOGNITION
@@ -113,6 +113,28 @@ class DatabaseSchema {
       CREATE TABLE user_preferences (
         key TEXT PRIMARY KEY,
         value TEXT
+      )
+    ''');
+
+    // ============================================================
+    // ROUTE SALVATE
+    // ============================================================
+
+    await db.execute('''
+      CREATE TABLE saved_routes (
+        id TEXT PRIMARY KEY,
+        origin_latitude REAL NOT NULL,
+        origin_longitude REAL NOT NULL,
+        destination_latitude REAL NOT NULL,
+        destination_longitude REAL NOT NULL,
+        distance_meters REAL NOT NULL,
+        duration_seconds REAL NOT NULL,
+        cycling_coverage_percentage REAL NOT NULL,
+        cycling_coverage_meters REAL NOT NULL,
+        score REAL NOT NULL,
+        road_work_count INTEGER NOT NULL,
+        geometry TEXT NOT NULL,
+        saved_at TEXT NOT NULL
       )
     ''');
   }

@@ -3,14 +3,17 @@ import 'package:flutter/material.dart';
 import '../database/database_helper.dart';
 import '../database/repositories/cycling_path_repository.dart';
 import '../database/repositories/road_work_repository.dart';
+import '../database/repositories/saved_route_repository.dart';
 import '../models/cycling_path_model.dart';
 import '../models/cycling_route_model.dart';
 import '../models/geo_point_model.dart';
 import '../models/road_work_model.dart';
+import '../models/saved_route_model.dart';
 import '../services/route_planner_service.dart';
 import '../widgets/route_map.dart';
 import '../widgets/route_result_card.dart';
 import '../widgets/route_search_form.dart';
+import 'saved_routes_screen.dart';
 
 class RoutePlannerScreen extends StatefulWidget {
   final String apiKey;
@@ -29,6 +32,7 @@ class _RoutePlannerScreenState
     extends State<RoutePlannerScreen> {
   late final CyclingPathRepository _cyclingPathRepository;
   late final RoadWorkRepository _roadWorkRepository;
+  late final SavedRouteRepository _savedRouteRepository;
   late final RoutePlannerService _routePlannerService;
 
   List<CyclingPathModel> _cyclingPaths = [];
@@ -55,6 +59,9 @@ class _RoutePlannerScreenState
 
     _roadWorkRepository =
         RoadWorkRepository(database);
+
+    _savedRouteRepository =
+        SavedRouteRepository(database);
 
     _routePlannerService = RoutePlannerService(
       apiKey: widget.apiKey,
@@ -94,9 +101,7 @@ class _RoutePlannerScreenState
     GeoPointModel origin,
     GeoPointModel destination,
   ) async {
-    if (_dataLoading) {
-      return;
-    }
+    if (_dataLoading) return;
 
     setState(() {
       _loading = true;
@@ -118,7 +123,7 @@ class _RoutePlannerScreenState
 
       if (routes.isEmpty) {
         throw Exception(
-          'Google Routes API non ha restituito '
+          'OpenRouteService non ha restituito '
           'alcun percorso.',
         );
       }
@@ -146,11 +151,75 @@ class _RoutePlannerScreenState
     }
   }
 
+  Future<void> _saveRoute(
+    CyclingRouteModel route,
+  ) async {
+    if (_origin == null || _destination == null) {
+      return;
+    }
+
+    final savedRoute = SavedRouteModel(
+      id: '${DateTime.now().millisecondsSinceEpoch}_${route.id}',
+      origin: _origin!,
+      destination: _destination!,
+      geometry: route.geometry,
+      distanceMeters: route.distanceMeters,
+      durationSeconds: route.durationSeconds,
+      cyclingCoveragePercentage:
+          route.cyclingCoveragePercentage,
+      cyclingCoverageMeters:
+          route.cyclingCoverageMeters,
+      score: route.score,
+      roadWorkCount: route.roadWorkCount,
+      savedAt: DateTime.now(),
+    );
+
+    try {
+      await _savedRouteRepository.insertSavedRoute(
+        savedRoute,
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Percorso salvato'),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Errore nel salvataggio del percorso: $e',
+          ),
+        ),
+      );
+    }
+  }
+
+  void _openSavedRoutes() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const SavedRoutesScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Route Planner'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history),
+            tooltip: 'Cronologia percorsi',
+            onPressed: _openSavedRoutes,
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -228,10 +297,28 @@ class _RoutePlannerScreenState
             itemBuilder: (context, index) {
               final route = _routes[index];
 
-              return RouteResultCard(
-                route: route,
-                recommended:
-                    route.id == _recommendedRoute?.id,
+              return Column(
+                children: [
+                  RouteResultCard(
+                    route: route,
+                    recommended:
+                        route.id == _recommendedRoute?.id,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _saveRoute(route),
+                        icon: const Icon(Icons.bookmark_border),
+                        label: const Text('Salva percorso'),
+                      ),
+                    ),
+                  ),
+                ],
               );
             },
           ),
