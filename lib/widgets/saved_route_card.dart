@@ -34,7 +34,7 @@ class SavedRouteCard extends StatelessWidget {
       return '${hours}h ${minutes}min';
     }
 
-    return '${minutes} min';
+    return '$minutes min';
   }
 
   String _formatDate(DateTime date) {
